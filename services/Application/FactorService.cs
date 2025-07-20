@@ -21,7 +21,7 @@ public class FactorService( UserRepository userRepo ,FactorRepository factorRepo
             .ToListAsync();
     }
 
-    public async Task<Factor> Create(int orderId, long customerId, DateTime dueDate)
+    public async Task<Factor> Create(long orderId, long customerId, DateTime dueDate)
     {
         var order = await orderRepo.FirstOrDefaultAsync(x => x.Id == orderId && x.CustomerId == customerId);
         if (order is null)

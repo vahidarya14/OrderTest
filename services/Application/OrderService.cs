@@ -1,13 +1,12 @@
 ﻿using Domain;
 using Microsoft.EntityFrameworkCore;
 using Persistance;
-using RedMaskFramework.DDD;
 
 namespace Application;
 
-public class OrderService(OrderRepository orderRepo) : IOrderService
+public class OrderService(OrderRepository orderRepo,IFactorService factorService) : IOrderService
 {
-    public async Task<Order> Create(long customerId,OrderCrreateDto dto)
+    public async Task<Factor> Create(long customerId,OrderCrreateDto dto)
     {
         var newOrder = new Order
         {
@@ -18,8 +17,11 @@ public class OrderService(OrderRepository orderRepo) : IOrderService
             Quantity= dto.Quantity
         };
         await orderRepo.AddAsync(newOrder);
-        await orderRepo.SaveChangesAsync(CancellationToken.None);
-        return newOrder;
+        var res=await orderRepo.SaveChangesAsync(CancellationToken.None);
+        if (res <= 0)
+            throw new Exception("error creating order");
+
+        return await factorService.Create(newOrder.Id, customerId, newOrder.OrderDate);
     }
 
     public async Task<List<Order>> ToListAsync(long? CustomerId, int skip, int take)
