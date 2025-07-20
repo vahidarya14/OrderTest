@@ -7,8 +7,10 @@
    /seed-data
    
 ## login
-   ### user:admin pass:123456  (for admin user)
-   ### user:user1 pass:123456  (for customer)
+   ### admin user
+    user:admin pass:123456  (for admin user)
+   ### normal user
+    user:user1 pass:123456  (for customer)
 
    ### /api/login
     get token and use for swagger auth (just put token without Bearer)
