@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using RedMaskFramework.DDD;
 
 namespace Domain;
 
-public class AppUser : IdentityUser<long>//customer
+public class AppUser : IdentityUser<long>, IAggregateRoot//customer
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

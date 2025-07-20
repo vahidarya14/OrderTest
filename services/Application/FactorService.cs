@@ -1,15 +1,15 @@
 ﻿using Domain;
 using Microsoft.EntityFrameworkCore;
-using Persistance.Data;
+using Persistance;
 
 namespace Application;
 
-public class FactorService(AppDbContext db) : IFactorService
+public class FactorService( UserRepository userRepo ,FactorRepository factorRepo,OrderRepository orderRepo) : IFactorService
 {
 
     public async Task<List<FactorListdto>> ToListAsync(long? CustomerId, int skip, int take)
     {
-        var q = db.Factors.Include(x => x.Order).ThenInclude(x => x.Customer).AsQueryable();
+        var q = factorRepo.Include(x => x.Order).ThenInclude(x => x.Customer).AsQueryable();
 
         if (CustomerId.HasValue)
             q = q.Where(x => x.Order.CustomerId == CustomerId);
@@ -23,7 +23,7 @@ public class FactorService(AppDbContext db) : IFactorService
 
     public async Task<Factor> Create(int orderId, long customerId, DateTime dueDate)
     {
-        var order = await db.Orders.FirstOrDefaultAsync(x => x.Id == orderId && x.CustomerId == customerId);
+        var order = await orderRepo.FirstOrDefaultAsync(x => x.Id == orderId && x.CustomerId == customerId);
         if (order is null)
             throw new Exception("order not found");
 
@@ -35,19 +35,19 @@ public class FactorService(AppDbContext db) : IFactorService
             Status = FactorStatus.Pending,
             InvoiceId = Guid.NewGuid(),
         };
-        await db.Factors.AddAsync(newFactor);
-        await db.SaveChangesAsync();
+        await factorRepo.AddAsync(newFactor);
+        await factorRepo.SaveChangesAsync(CancellationToken.None);
 
         return newFactor;
     }
 
     public async Task<bool> Pay(Guid invoiceId, long customerId)
     {
-        var customer = await db.Users.FirstOrDefaultAsync(x => x.Id == customerId);
+        var customer = await userRepo.FirstOrDefaultAsync(x => x.Id == customerId);
         if (customer is null)
             throw new Exception("customer not found");
 
-        var factor = await db.Factors.FirstOrDefaultAsync(x => x.InvoiceId == invoiceId && x.Order.CustomerId == customerId);
+        var factor = await factorRepo.FirstOrDefaultAsync(x => x.InvoiceId == invoiceId && x.Order.CustomerId == customerId);
         if (factor is null)
             throw new Exception("factor not found");
 
@@ -57,7 +57,7 @@ public class FactorService(AppDbContext db) : IFactorService
         factor.Status = FactorStatus.Paid;
         customer.WalletBalance -= factor.Amount;
 
-        await db.SaveChangesAsync();
+        await factorRepo.SaveChangesAsync(CancellationToken.None);
 
         return true;
     }

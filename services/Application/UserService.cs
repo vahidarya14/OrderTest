@@ -1,21 +1,20 @@
 ﻿using Domain;
 using Microsoft.EntityFrameworkCore;
-using Persistance.Data;
-using System.Security.Claims;
+using Persistance;
 
 namespace Application;
 
-public class UserService(AppDbContext db) : IUserService
+public class UserService(UserRepository db) : IUserService
 {
-    public AppUser Profile(string userName)
+    public async Task<AppUser> Profile(string userName)
     {
-        var user = db.Users.FirstOrDefault(x => x.UserName == userName);
+        var user =await db.FirstOrDefaultAsync(x => x.UserName == userName);
         return user;
     }
 
     public async Task<List<AppUser>> ToListAsync(int skip, int take)
     {
-        var user = await db.Users.AsNoTracking().ToListAsync();
+        var user = await db.AsNoTracking().ToListAsync();
         return user;
     }
 }

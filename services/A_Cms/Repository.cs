@@ -1,17 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using RedMaskFramework;
 using RedMaskFramework.DDD;
 using System.Linq.Expressions;
 
 namespace Persistance;
 
-public class Repository<TDbContext, T>(TDbContext db) : IRepository<T>
-                                            where TDbContext : DbContext, IUnitOfWork
+public class Repository<TDbContext, T>(TDbContext _db) 
+                                            where TDbContext : DbContext
                                             where T : class, IAggregateRoot
 {
-    protected TDbContext _db = db;
-    public IUnitOfWork UnitOfWork => _db;
 
     public IIncludableQueryable<T, TProp> Include<TProp>(Expression<Func<T, TProp>> navigationPropertyPath)
     {
@@ -44,7 +41,7 @@ public class Repository<TDbContext, T>(TDbContext db) : IRepository<T>
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken ct)
-        => await UnitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+        => await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 
     public async Task<int> CountAsync(CancellationToken ct = default)
         => await _db.Set<T>().CountAsync(ct).ConfigureAwait(false);

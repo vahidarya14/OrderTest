@@ -1,6 +1,8 @@
-﻿namespace Domain;
+﻿using RedMaskFramework.DDD;
 
-public class Factor
+namespace Domain;
+
+public class Factor:IAggregateRoot
 {
     public long Id { get; set; }
     public DateTime DueDate { get; set; }
