@@ -9,7 +9,8 @@ namespace Persistance.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser, AppRole, long>(options)
 {
     public DbSet<Factor> Factors { get; set; }
-    public DbSet<Order> Orders { get; set; }
+    public DbSet<Wallet> Wallets { get; set; }
+    public DbSet<Transaction> Transactions { get; set; }
 
 
 
@@ -17,15 +18,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<AppRole>(x =>
+
+        builder.Entity<Wallet>(x =>
         {
-            x.ToTable("AspNetRoles", "dbo");
+            x.OwnsOne(x=>x.Walletsetting);
         });
 
-        builder.Entity<Order>(x =>
-        {
-            x.Property(p=>p.Product).HasMaxLength(150);
-        });
 
     }
 }

@@ -3,16 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using Persistance;
 
 namespace Application;
-
-public class FactorService( UserRepository userRepo ,FactorRepository factorRepo,OrderRepository orderRepo) : IFactorService
+public interface IFactorService
+{
+    Task<Factor> Create(long orderId, long customerId, DateTime dueDate);
+    Task<bool> Pay(Guid invoiceId, long customerId);
+    Task<List<FactorListdto>> ToListAsync(long? CustomerId, int skip, int take);
+}
+public class FactorService( UserRepository userRepo ,FactorRepository factorRepo) : IFactorService
 {
 
     public async Task<List<FactorListdto>> ToListAsync(long? CustomerId, int skip, int take)
     {
-        var q = factorRepo.Include(x => x.Order).ThenInclude(x => x.Customer).AsQueryable();
-
-        if (CustomerId.HasValue)
-            q = q.Where(x => x.Order.CustomerId == CustomerId);
+        var q = factorRepo.AsQueryable();
 
         return await q.AsNoTracking().OrderByDescending(x => x.DueDate)
             .Skip(skip)
@@ -23,15 +25,11 @@ public class FactorService( UserRepository userRepo ,FactorRepository factorRepo
 
     public async Task<Factor> Create(long orderId, long customerId, DateTime dueDate)
     {
-        var order = await orderRepo.FirstOrDefaultAsync(x => x.Id == orderId && x.CustomerId == customerId);
-        if (order is null)
-            throw new Exception("order not found");
 
         var newFactor = new Factor
         {
             OrderId = orderId,
             DueDate = dueDate,
-            Amount = order.TotalAmount,
             Status = FactorStatus.Pending,
             InvoiceId = Guid.NewGuid(),
         };

@@ -18,3 +18,8 @@ public class UserService(UserRepository db) : IUserService
         return user;
     }
 }
+public interface IUserService
+{
+    Task<List<AppUser>> ToListAsync(int skip, int take);
+    Task<AppUser> Profile(string userName);
+}

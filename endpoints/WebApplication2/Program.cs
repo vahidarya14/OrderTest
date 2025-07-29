@@ -89,11 +89,9 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 
 builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<IUserService,UserService>();
-builder.Services.AddScoped<IOrderService,OrderService>();
 builder.Services.AddScoped<IFactorService,FactorService>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<FactorRepository>();
-builder.Services.AddScoped<OrderRepository>();
 
 var app = builder.Build();
 
