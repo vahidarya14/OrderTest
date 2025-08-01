@@ -8,6 +8,8 @@ public class Transaction
     public string Reference { get; set; }
     public TransactionType TransactionType { get; set; }
     public TransactionStatus Status { get; set; }
+    public long WalletId { get; set; }
+    public Wallet Wallet { get; set; }
 }
 public enum TransactionType
 {

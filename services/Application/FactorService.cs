@@ -45,15 +45,15 @@ public class FactorService( UserRepository userRepo ,FactorRepository factorRepo
         if (customer is null)
             throw new Exception("customer not found");
 
-        var factor = await factorRepo.FirstOrDefaultAsync(x => x.InvoiceId == invoiceId && x.Order.CustomerId == customerId);
+        var factor = await factorRepo.FirstOrDefaultAsync(x => x.InvoiceId == invoiceId && x.CustomerId == customerId);
         if (factor is null)
             throw new Exception("factor not found");
 
-        if (customer.WalletBalance < factor.Amount)
-            throw new Exception("WalletBalance is les than factor Amount");
+        //if (customer.WalletBalance < factor.Amount)
+        //    throw new Exception("WalletBalance is les than factor Amount");
 
         factor.Status = FactorStatus.Paid;
-        customer.WalletBalance -= factor.Amount;
+        //customer.WalletBalance -= factor.Amount;
 
         await factorRepo.SaveChangesAsync(CancellationToken.None);
 
@@ -76,8 +76,5 @@ public record FactorListdto
             DueDate = x.DueDate,
             Status = x.Status,
             Amount = x.Amount,
-            Product = x.Order.Product,
-            Quantity = x.Order.Quantity,
-            UserName = x.Order.Customer.UserName
         };
 }

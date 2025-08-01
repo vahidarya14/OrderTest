@@ -1,11 +1,17 @@
 ﻿using Application;
+using Application.Lib;
 using Domain;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Persistance;
 using Persistance.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -88,9 +94,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 
 builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<IUserService,UserService>();
-builder.Services.AddScoped<IFactorService,FactorService>();
 builder.Services.AddScoped<UserRepository>();
-builder.Services.AddScoped<FactorRepository>();
 
 var app = builder.Build();
 
@@ -115,8 +119,68 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSeedDataEndPoints();
-app.UseLoginEndPoints();
-app.UseApplicationEndPoints();
+app.MapGet("/seed-data", async (SeedData db) => await db.Seed());
+
+app.MapGet("/api/profile", [Authorize] async ([FromServices] IUserService userService, ClaimsPrincipal claimsPrincipal)
+            => await userService.Profile(claimsPrincipal.UserName()));
+
+
+app.MapGet("/api/users", [Authorize(Roles = "Admin")] async ([FromServices] IUserService userService)
+    => await userService.ToListAsync(0, 10));
+
+
+app.MapPost("/api/login", async (IConfiguration Configuration,
+                                 UserManager<Customer> userManager,
+                                 SignInManager<Customer> signInManager,
+                                 RoleManager<AppRole> roleManager,
+                                 string userName, string password) =>
+{
+    try
+    {
+        if (await signInManager.PasswordSignInAsync(userName, password, isPersistent: false, lockoutOnFailure: false) == Microsoft.AspNetCore.Identity.SignInResult.Failed)
+            throw new Exception("رمز یا نام کاربری اشتباه");
+
+        var applicationUser = await userManager.FindByNameAsync(userName);
+        var roles = await userManager.GetRolesAsync(applicationUser);
+
+        string token = GenerateJSONWebToken(applicationUser, roles);
+        return token;
+    }
+    catch (Exception ex)
+    {
+        throw;
+    }
+
+
+    string GenerateJSONWebToken(Customer userInfo, IList<string> roles)
+    {
+        var key = Configuration["JWT:Secret"];
+        var Issuer = Configuration["JWT:ValidIssuer"];
+
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        List<Claim> claims = new() {
+                new Claim(JwtRegisteredClaimNames.Sub, userInfo.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, userInfo.Email),
+                new Claim("username", userInfo.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            };
+        foreach (var item in roles)
+        {
+            //claims.Add(new Claim("Role", item));
+            claims.Add(new Claim(ClaimTypes.Role, item));
+        }
+
+        var token = new JwtSecurityToken(Issuer,
+            Issuer,
+            claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+});
+
 
 app.Run();

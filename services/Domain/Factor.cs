@@ -10,6 +10,7 @@ public class Factor:IAggregateRoot
     public long OrderId { get; set; }
     public Guid InvoiceId { get; set; }
     public FactorStatus Status { get; set; }
+    public long CustomerId { get; set; }
 }
 
 public enum FactorStatus

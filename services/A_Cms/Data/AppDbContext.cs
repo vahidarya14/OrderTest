@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Persistance.Data;
 
-//add-migration init -p A_Common -s OrderApi -context AppDbContext
+//add-migration init -p Persistance -s OrderApi -context AppDbContext
 //update-database -context AppDbContext
-public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser, AppRole, long>(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<Customer, AppRole, long>(options)
 {
     public DbSet<Factor> Factors { get; set; }
     public DbSet<Wallet> Wallets { get; set; }
@@ -21,7 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
         builder.Entity<Wallet>(x =>
         {
-            x.OwnsOne(x=>x.Walletsetting);
+            x.OwnsOne(x=>x.Setting);
         });
 
 

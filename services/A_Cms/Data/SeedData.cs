@@ -8,7 +8,7 @@ public class Consts
 {
     public static string Admin => "Admin";
 }
-public class SeedData(AppDbContext db, UserManager<AppUser> userMgmt, RoleManager<AppRole> roleMgmt, IConfiguration configuration)
+public class SeedData(AppDbContext db, UserManager<Customer> userMgmt, RoleManager<AppRole> roleMgmt, IConfiguration configuration)
 {
     public async Task Seed()
     {
@@ -17,7 +17,7 @@ public class SeedData(AppDbContext db, UserManager<AppUser> userMgmt, RoleManage
 
         if (!await db.Users.AnyAsync())
         {
-            var admin = new AppUser
+            var admin = new Customer
             {
                 FirstName = "وحید",
                 LastName = "آریا",
@@ -28,16 +28,27 @@ public class SeedData(AppDbContext db, UserManager<AppUser> userMgmt, RoleManage
             await userMgmt.AddToRoleAsync(admin, Consts.Admin);
 
 
-            var user2 = new AppUser
+            var user2 = new Customer
             {
                 FirstName = "test",
                 LastName = "test",
                 UserName = "09192962584",
                 Email = "user1",
-                WalletBalance=1000000000
             };
             await userMgmt.CreateAsync(user2, "123456");
 
+            await db.SaveChangesAsync();
+
+            var wallet = new Wallet()
+            {
+                UserId = user2.Id,
+                Setting = new WalletSetting
+                {
+                    MinBalanceWithdrawlThreshold = -150
+                },
+                FreeBalance = 10000000000
+            };
+            await db.Wallets.AddAsync(wallet);
             await db.SaveChangesAsync();
         }
 
